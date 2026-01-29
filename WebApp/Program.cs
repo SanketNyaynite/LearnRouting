@@ -17,6 +17,8 @@ app.Use(async (context, next) =>
     await next(context);
 });
 
+app.UseStaticFiles();
+
 app.UseRouting();
 
 app.Use(async (context, next) =>
