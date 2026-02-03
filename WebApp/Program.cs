@@ -1,84 +1,135 @@
-var builder = WebApplication.CreateBuilder(args);
+using System.Text.Json;
+using WebApp.Models;
 
-builder.Services.AddRouting(options =>
-{
-    options.ConstraintMap.Add("pos", typeof(PositionConstraint));
-});
+var builder = WebApplication.CreateBuilder(args);
 
 var app = builder.Build();
 
-//app.MapGet("/employees", async (HttpContext context) =>
-//{
-//   await context.Response.WriteAsync("Get Employees");
-//});
-
-app.Use(async (context, next) =>
-{
-    await next(context);
-});
-
-app.UseStaticFiles();
-
 app.UseRouting();
-
-app.Use(async (context, next) =>
-{
-    await next(context);
-});
 
 app.UseEndpoints(endpoints =>
 {
+
+    endpoints.MapGet("/", async (HttpContext context) =>
+    {
+        await context.Response.WriteAsync("Welcome to the Homepage");
+    });
+
     endpoints.MapGet("/employees", async (HttpContext context) =>
     {
-        await context.Response.WriteAsync("Get Employees");
+        // Get all of the employees' information
+        var employees = EmployeesRepository.GetEmployees();
+
+        context.Response.ContentType = "text/html";
+        await context.Response.WriteAsync("<h2>Employees</h><br/>");
+        await context.Response.WriteAsync("<ul>");
+        foreach (var employee in employees)
+        {
+            await context.Response.WriteAsync($"<li><b>{employee.Name}</b>: {employee.Position}</li>");
+        }
+        await context.Response.WriteAsync("</ul>");
+    });
+
+    endpoints.MapGet("/employees/{id:int}", async (HttpContext context) =>
+    {
+            var id = context.Request.RouteValues["id"];
+            var employeeId = int.Parse(id.ToString());
+        
+            // Get a particular employee's information
+            var employee = EmployeesRepository.GetEmployeeById(employeeId);
+
+            context.Response.ContentType = "text/html";
+
+        await context.Response.WriteAsync("<h2>Employee</h>");
+        if (employee is not null)
+            {
+                await context.Response.WriteAsync($"Name: {employee.Name}<br/>");
+                await context.Response.WriteAsync($"Position: {employee.Position}<br/>");
+                await context.Response.WriteAsync($"Salary: {employee.Salary}<br/>");
+            }
+            else
+            {
+                context.Response.StatusCode = 404;
+                await context.Response.WriteAsync("Employee not found.");
+            }
     });
 
     endpoints.MapPost("/employees", async (HttpContext context) =>
     {
-        await context.Response.WriteAsync("Created an Employee");
+        using var reader = new StreamReader(context.Request.Body);
+        var body = await reader.ReadToEndAsync();
+
+        try
+        {
+            var employee = JsonSerializer.Deserialize<Employee>(body);
+
+            if (employee is null || employee.Id <= 0)
+            {
+                context.Response.StatusCode = 400;
+                return;
+            }
+
+            EmployeesRepository.AddEmployee(employee);
+
+            context.Response.StatusCode = 201;
+            await context.Response.WriteAsync("Employee added successfully.");
+        }
+        catch (Exception ex)
+        {
+            context.Response.StatusCode = 400;
+            await context.Response.WriteAsync(ex.ToString());
+            return;
+        }
     });
 
     endpoints.MapPut("/employees", async (HttpContext context) =>
     {
-        await context.Response.WriteAsync("Updated an Employee");
+        using var reader = new StreamReader(context.Request.Body);
+        var body = await reader.ReadToEndAsync();
+        var employee = JsonSerializer.Deserialize<Employee>(body);
+
+        var result = EmployeesRepository.UpdateEmployee(employee);
+        if (result)
+        {
+            context.Response.StatusCode = 204;
+            return;
+        }
+        else
+        {
+            await context.Response.WriteAsync("Employee not found.");
+        }
     });
 
     endpoints.MapDelete("/employees/{id}", async (HttpContext context) =>
     {
-        await context.Response.WriteAsync($"Deleted an Employee: {context.Request.RouteValues["id"]}");
-    });
+            var id = context.Request.RouteValues["id"];
+            var employeeId = int.Parse(id.ToString());
 
-    //endpoints.MapGet("/{category=shirts}/{size=medium}/{id?}", async (HttpContext context) =>
-    //{
-    //    await context.Response.WriteAsync($"Get category: {context.Request.RouteValues["category"]} in size: {context.Request.RouteValues["size"]} and ID is: {context.Request.RouteValues["id"]}");
-    //});
+        
+            
+                if (context.Request.Headers["Authorization"] == "frank")
+                {
+                    var result = EmployeesRepository.DeleteEmployee(employeeId);
 
-    endpoints.MapGet("/employees/{id:int}", async (HttpContext context) =>
-    {
-        await context.Response.WriteAsync($"Get employee: {context.Request.RouteValues["id"]}");
-    });
-
-    endpoints.MapGet("/employees/positions/{position:pos}", async (HttpContext context) =>
-    {
-        await context.Response.WriteAsync($"Get employees under position: {context.Request.RouteValues["position"]}");
+                    if (result)
+                    {
+                        await context.Response.WriteAsync("Employee is deleted successfully.");
+                    }
+                    else
+                    {
+                        context.Response.StatusCode = 404;
+                        await context.Response.WriteAsync("Employee not found.");
+                    }
+                }
+                else
+                {
+                    context.Response.StatusCode = 401;
+                    await context.Response.WriteAsync("You are not authorized to delete.");
+                }
     });
 });
 
 app.Run();
-
-class PositionConstraint : IRouteConstraint
-{
-    public bool Match(HttpContext? httpContext, IRouter? route, string routeKey, RouteValueDictionary values, RouteDirection routeDirection)
-    {
-        if (!values.ContainsKey(routeKey)) return false;
-        if (values[routeKey] is null) return false;
-        
-        if (values[routeKey].ToString().Equals("manager", StringComparison.OrdinalIgnoreCase) ||
-            values[routeKey].ToString().Equals("developer", StringComparison.OrdinalIgnoreCase))        
-            return true;
-        return false;
-    }
-}
 
 
 
