@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 using WebApp.Models;
 
@@ -30,29 +31,37 @@ app.UseEndpoints(endpoints =>
         await context.Response.WriteAsync("</ul>");
     });
 
-    endpoints.MapGet("/employees/{id:int}", async (HttpContext context) =>
+    endpoints.MapGet("/employees/{id:int}", ([FromRoute (Name = "id")] int identityNumber) =>
     {
-            var id = context.Request.RouteValues["id"];
-            var employeeId = int.Parse(id.ToString());
+            var employee = EmployeesRepository.GetEmployeeById(identityNumber);
+
+            return employee;
         
-            // Get a particular employee's information
-            var employee = EmployeesRepository.GetEmployeeById(employeeId);
-
-            context.Response.ContentType = "text/html";
-
-        await context.Response.WriteAsync("<h2>Employee</h>");
-        if (employee is not null)
-            {
-                await context.Response.WriteAsync($"Name: {employee.Name}<br/>");
-                await context.Response.WriteAsync($"Position: {employee.Position}<br/>");
-                await context.Response.WriteAsync($"Salary: {employee.Salary}<br/>");
-            }
-            else
-            {
-                context.Response.StatusCode = 404;
-                await context.Response.WriteAsync("Employee not found.");
-            }
     });
+
+    //endpoints.MapGet("/employees/{id:int}", async (HttpContext context) =>
+    //{
+    //        var id = context.Request.RouteValues["id"];
+    //        var employeeId = int.Parse(id.ToString());
+        
+    //        // Get a particular employee's information
+    //        var employee = EmployeesRepository.GetEmployeeById(employeeId);
+
+    //        context.Response.ContentType = "text/html";
+
+    //    await context.Response.WriteAsync("<h2>Employee</h>");
+    //    if (employee is not null)
+    //        {
+    //            await context.Response.WriteAsync($"Name: {employee.Name}<br/>");
+    //            await context.Response.WriteAsync($"Position: {employee.Position}<br/>");
+    //            await context.Response.WriteAsync($"Salary: {employee.Salary}<br/>");
+    //        }
+    //        else
+    //        {
+    //            context.Response.StatusCode = 404;
+    //            await context.Response.WriteAsync("Employee not found.");
+    //        }
+    //});
 
     endpoints.MapPost("/employees", async (HttpContext context) =>
     {
@@ -135,6 +144,6 @@ app.Run();
 
 /*NOTES
  * An Endpoint handles a request and returns a response.
- * 
+ * Model binding is extracting data from Http request to .Net objects as parameters in endpoint handlers.
  * 
  */
