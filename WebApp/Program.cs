@@ -31,11 +31,14 @@ app.UseEndpoints(endpoints =>
     //    await context.Response.WriteAsync("</ul>");
     //});
 
-    endpoints.MapGet("/employees", ([FromHeader(Name = "identity")] int id) =>
+    endpoints.MapGet("/employees/{id:int}", ([AsParameters]GetEmployeeParamereter param) =>
     {
-            var employee = EmployeesRepository.GetEmployeeById(id);
+            var employee = EmployeesRepository.GetEmployeeById(param.Id);
 
-            return employee;
+        employee.Name = param.Name;
+        employee.Position = param.Position;   
+
+        return employee;
      
     });
 
@@ -147,3 +150,14 @@ app.Run();
  * Model binding is extracting data from Http request to .Net objects as parameters in endpoint handlers.
  * 
  */
+
+
+struct GetEmployeeParamereter
+{
+    [FromRoute]
+    public int Id { get; set; }
+    [FromQuery]
+    public string Name { get; set; }
+    [FromHeader]
+    public string Position { get; set; }
+}
