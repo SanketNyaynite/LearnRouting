@@ -16,27 +16,30 @@ app.UseEndpoints(endpoints =>
         await context.Response.WriteAsync("Welcome to the Homepage");
     });
 
-    endpoints.MapGet("/employees", async (HttpContext context) =>
-    {
-        // Get all of the employees' information
-        var employees = EmployeesRepository.GetEmployees();
+    //endpoints.MapGet("/employees", async (HttpContext context) =>
+    //{
+    //    // Get all of the employees' information
+    //    var employees = EmployeesRepository.GetEmployees();
 
-        context.Response.ContentType = "text/html";
-        await context.Response.WriteAsync("<h2>Employees</h><br/>");
-        await context.Response.WriteAsync("<ul>");
-        foreach (var employee in employees)
+    //    context.Response.ContentType = "text/html";
+    //    await context.Response.WriteAsync("<h2>Employees</h><br/>");
+    //    await context.Response.WriteAsync("<ul>");
+    //    foreach (var employee in employees)
+    //    {
+    //        await context.Response.WriteAsync($"<li><b>{employee.Name}</b>: {employee.Position}</li>");
+    //    }
+    //    await context.Response.WriteAsync("</ul>");
+    //});
+
+    endpoints.MapGet("/employees/{id:int}", (int? identityNumber) =>
+    {
+        if (identityNumber.HasValue)
         {
-            await context.Response.WriteAsync($"<li><b>{employee.Name}</b>: {employee.Position}</li>");
-        }
-        await context.Response.WriteAsync("</ul>");
-    });
-
-    endpoints.MapGet("/employees/{id:int}", ([FromRoute (Name = "id")] int identityNumber) =>
-    {
-            var employee = EmployeesRepository.GetEmployeeById(identityNumber);
+            var employee = EmployeesRepository.GetEmployeeById(identityNumber.Value);
 
             return employee;
-        
+        }
+        return null;
     });
 
     //endpoints.MapGet("/employees/{id:int}", async (HttpContext context) =>
