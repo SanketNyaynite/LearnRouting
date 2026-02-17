@@ -64,32 +64,17 @@ app.UseEndpoints(endpoints =>
     //        }
     //});
 
-    endpoints.MapPost("/employees", async (HttpContext context) =>
+    endpoints.MapPost("/employees",  (Employee employee) =>
     {
-        using var reader = new StreamReader(context.Request.Body);
-        var body = await reader.ReadToEndAsync();
-
-        try
-        {
-            var employee = JsonSerializer.Deserialize<Employee>(body);
-
             if (employee is null || employee.Id <= 0)
             {
-                context.Response.StatusCode = 400;
-                return;
+                return "Employee is not provided or is not valid";
             }
 
             EmployeesRepository.AddEmployee(employee);
 
-            context.Response.StatusCode = 201;
-            await context.Response.WriteAsync("Employee added successfully.");
-        }
-        catch (Exception ex)
-        {
-            context.Response.StatusCode = 400;
-            await context.Response.WriteAsync(ex.ToString());
-            return;
-        }
+        return "Employee added successfully.";
+        
     });
 
     endpoints.MapPut("/employees", async (HttpContext context) =>
