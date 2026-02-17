@@ -21,22 +21,27 @@ app.UseEndpoints(endpoints =>
         return $"Id is {p?.Id}; Name is {p?.Name}";
     });
 
-    //endpoints.MapGet("/employees", async (HttpContext context) =>
-    //{
-    //    // Get all of the employees' information
-    //    var employees = EmployeesRepository.GetEmployees();
+//endpoints.MapGet("/employees", async (HttpContext context) =>
+//{
+//    // Get all of the employees' information
+//    var employees = EmployeesRepository.GetEmployees();
 
-    //    context.Response.ContentType = "text/html";
-    //    await context.Response.WriteAsync("<h2>Employees</h><br/>");
-    //    await context.Response.WriteAsync("<ul>");
-    //    foreach (var employee in employees)
-    //    {
-    //        await context.Response.WriteAsync($"<li><b>{employee.Name}</b>: {employee.Position}</li>");
-    //    }
-    //    await context.Response.WriteAsync("</ul>");
-    //});
+//    context.Response.ContentType = "text/html";
+//    await context.Response.WriteAsync("<h2>Employees</h><br/>");
+//    await context.Response.WriteAsync("<ul>");
+//    foreach (var employee in employees)
+//    {
+//        await context.Response.WriteAsync($"<li><b>{employee.Name}</b>: {employee.Position}</li>");
+//    }
+//    await context.Response.WriteAsync("</ul>");
+//});
 
-    endpoints.MapGet("/employees", ([FromHeader(Name ="id")]int[] ids) =>
+endpoints.MapGet("/people", (int id) =>
+    {
+        
+    });
+
+    endpoints.MapGet("/employees", (int[] ids) =>
     {
         var employees = EmployeesRepository.GetEmployees(); 
         var emps = employees.Where(x => ids.Contains(x.Id)).ToList();
