@@ -31,15 +31,13 @@ app.UseEndpoints(endpoints =>
     //    await context.Response.WriteAsync("</ul>");
     //});
 
-    endpoints.MapGet("/employees/{id:int}", ([AsParameters]GetEmployeeParamereter param) =>
+    endpoints.MapGet("/employees", ([FromHeader(Name ="id")]int[] ids) =>
     {
-            var employee = EmployeesRepository.GetEmployeeById(param.Id);
+        var employees = EmployeesRepository.GetEmployees(); 
+        var emps = employees.Where(x => ids.Contains(x.Id)).ToList();
 
-        employee.Name = param.Name;
-        employee.Position = param.Position;   
 
-        return employee;
-     
+        return emps;
     });
 
     //endpoints.MapGet("/employees/{id:int}", async (HttpContext context) =>
