@@ -16,6 +16,11 @@ app.UseEndpoints(endpoints =>
         await context.Response.WriteAsync("Welcome to the Homepage");
     });
 
+    endpoints.MapGet("/people", (Person? p) =>
+    {
+        return $"Id is {p?.Id}; Name is {p?.Name}";
+    });
+
     //endpoints.MapGet("/employees", async (HttpContext context) =>
     //{
     //    // Get all of the employees' information
@@ -143,4 +148,21 @@ struct GetEmployeeParamereter
     public string Name { get; set; }
     [FromHeader]
     public string Position { get; set; }
+}
+
+class Person
+{
+    public int Id { get; set; }
+    public string? Name { get; set; }
+
+    public static ValueTask<Person?> BindAsync(HttpContext context)
+    {
+        var idStr = context.Request.Query["id"];
+        var nameStr = context.Request.Headers["name"];
+        if (int.TryParse(idStr, out var id))
+        {
+            return new ValueTask<Person?>(new Person {Id = id, Name = nameStr });
+        }
+        return new ValueTask<Person?>(Task.FromResult<Person?>(null));
+    }
 }
